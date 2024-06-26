@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/Nebula-Pack/repo-emmulator/pkg/clone"
@@ -22,6 +23,13 @@ func CloneRepository(repo string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	// Defer deletion of cacheDir after function completes
+	defer func() {
+		if err := os.RemoveAll(cacheDir); err != nil {
+			fmt.Printf("Failed to delete cache directory %s: %s\n", cacheDir, err.Error())
+		}
+	}()
 
 	return isLua, nil
 }
