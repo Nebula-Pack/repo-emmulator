@@ -18,11 +18,11 @@ func CloneRepo(c *gin.Context) {
 		return
 	}
 
-	err := service.CloneRepository(req.Repo)
+	isLua, err := service.CloneRepository(req.Repo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "success"})
+	c.JSON(http.StatusOK, gin.H{"isLua": isLua})
 }

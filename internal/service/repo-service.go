@@ -8,15 +8,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func CloneRepository(repo string) error {
+// CloneRepository clones the repository and checks if it's a Lua project
+func CloneRepository(repo string) (bool, error) {
 	repoURL := fmt.Sprintf("https://github.com/%s", repo)
-
 	cacheDir := filepath.Join("cache", uuid.New().String())
 
 	err := clone.CloneRepo(repoURL, cacheDir)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	isLua, err := clone.IsLuaProject(cacheDir)
+	if err != nil {
+		return false, err
+	}
+
+	return isLua, nil
 }
