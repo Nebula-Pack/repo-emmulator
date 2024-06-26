@@ -18,13 +18,16 @@ func CloneRepo(c *gin.Context) {
 		return
 	}
 
-	isLua, hasRockspec, scanResponse, err := service.CloneRepository(req.Repo)
+	repoURL, isLua, hasRockspec, scanResponse, err := service.CloneRepository(req.Repo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	response := gin.H{"isLua": isLua}
+	response := gin.H{
+		"github_url": repoURL,
+		"isLua":      isLua,
+	}
 	if hasRockspec {
 		response["hasRockspec"] = hasRockspec
 		response["scanResponse"] = scanResponse
