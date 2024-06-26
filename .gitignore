@@ -1,1 +1,5 @@
-cache/
+# Ignore everything in the cache folder
+/cache/*
+
+# Except the cache folder itself
+!/cache/
