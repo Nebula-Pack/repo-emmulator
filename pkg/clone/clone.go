@@ -8,7 +8,6 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-// CloneRepo clones the given repository to the cacheDir
 func CloneRepo(repoURL, cacheDir string) error {
 	err := os.MkdirAll(filepath.Dir(cacheDir), os.ModePerm)
 	if err != nil {
@@ -25,9 +24,9 @@ func CloneRepo(repoURL, cacheDir string) error {
 	return nil
 }
 
-// IsLuaProject checks if the repository is a Lua project
-func IsLuaProject(cacheDir string) (bool, error) {
-	var luaFileFound bool
+func CheckProjectFiles(cacheDir string) (bool, bool, error) {
+	var luaFileFound, rockspecFileFound bool
+
 	err := filepath.Walk(cacheDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -35,6 +34,10 @@ func IsLuaProject(cacheDir string) (bool, error) {
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".lua") {
 			luaFileFound = true
+		}
+
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".rockspec") {
+			rockspecFileFound = true
 		}
 
 		if info.IsDir() && info.Name() == "node_modules" {
@@ -45,8 +48,8 @@ func IsLuaProject(cacheDir string) (bool, error) {
 	})
 
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
-	return luaFileFound, nil
+	return luaFileFound, rockspecFileFound, nil
 }
