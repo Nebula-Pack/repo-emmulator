@@ -18,21 +18,27 @@ type ScanRockspecResponse struct {
 	Lua string `json:"lua"`
 }
 
-func CloneRepository(repo string) (string, bool, bool, *ScanRockspecResponse, error) {
+func CloneRepository(repo string) (string, bool, bool, *ScanRockspecResponse, string, error) {
 	repoURL := fmt.Sprintf("https://github.com/%s", repo)
 	cacheDir := filepath.Join("cache", uuid.New().String())
 
 	fmt.Printf("Cloning repository: %s into %s\n", repoURL, cacheDir)
 	err := clone.CloneRepo(repoURL, cacheDir)
 	if err != nil {
-		return repoURL, false, false, nil, err
+		return repoURL, false, false, nil, "", err
 	}
 
 	isLua, hasRockspec, err := clone.CheckProjectFiles(cacheDir)
 	fmt.Printf("CheckProjectFiles: isLua=%t, hasRockspec=%t\n", isLua, hasRockspec)
 	if err != nil {
-		return repoURL, false, false, nil, err
+		return repoURL, false, false, nil, "", err
 	}
+
+	version, err := clone.ExtractVersion(cacheDir)
+	if err != nil {
+		return repoURL, false, false, nil, "", err
+	}
+	fmt.Printf("Extracted version: %s\n", version)
 
 	defer func() {
 		if err := os.RemoveAll(cacheDir); err != nil {
@@ -41,7 +47,7 @@ func CloneRepository(repo string) (string, bool, bool, *ScanRockspecResponse, er
 	}()
 
 	if !isLua {
-		return repoURL, false, false, nil, nil
+		return repoURL, false, false, nil, version, nil
 	}
 
 	var scanResponse *ScanRockspecResponse
@@ -63,21 +69,21 @@ func CloneRepository(repo string) (string, bool, bool, *ScanRockspecResponse, er
 			return nil
 		})
 		if err != nil {
-			return repoURL, false, false, nil, fmt.Errorf("error finding rockspec file: %w", err)
+			return repoURL, false, false, nil, "", fmt.Errorf("error finding rockspec file: %w", err)
 		}
 
 		if rockspecPath == "" {
-			return repoURL, false, false, nil, fmt.Errorf("no rockspec file found")
+			return repoURL, false, false, nil, "", fmt.Errorf("no rockspec file found")
 		}
 
 		scanResponse, err = postRockspec(rockspecPath)
 		if err != nil {
-			return repoURL, false, false, nil, err
+			return repoURL, false, false, nil, "", err
 		}
 	}
 
 	fmt.Printf("Final scan response: %+v\n", scanResponse)
-	return repoURL, isLua, hasRockspec, scanResponse, nil
+	return repoURL, isLua, hasRockspec, scanResponse, version, nil
 }
 
 func postRockspec(rockspecPath string) (*ScanRockspecResponse, error) {
