@@ -18,12 +18,12 @@ type ScanRockspecResponse struct {
 	Lua string `json:"lua"`
 }
 
-func CloneRepository(repo string) (string, bool, bool, *ScanRockspecResponse, string, error) {
+func CloneRepository(repo string, version string) (string, bool, bool, *ScanRockspecResponse, string, error) {
 	repoURL := fmt.Sprintf("https://github.com/%s", repo)
 	cacheDir := filepath.Join("cache", uuid.New().String())
 
 	fmt.Printf("Cloning repository: %s into %s\n", repoURL, cacheDir)
-	err := clone.CloneRepo(repoURL, cacheDir)
+	err := clone.CloneRepo(repoURL, cacheDir, version)
 	if err != nil {
 		return repoURL, false, false, nil, "", err
 	}
@@ -33,12 +33,6 @@ func CloneRepository(repo string) (string, bool, bool, *ScanRockspecResponse, st
 	if err != nil {
 		return repoURL, false, false, nil, "", err
 	}
-
-	version, err := clone.ExtractVersion(cacheDir)
-	if err != nil {
-		return repoURL, false, false, nil, "", err
-	}
-	fmt.Printf("Extracted version: %s\n", version)
 
 	defer func() {
 		if err := os.RemoveAll(cacheDir); err != nil {

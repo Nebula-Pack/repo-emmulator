@@ -9,15 +9,26 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
-func CloneRepo(repoURL, cacheDir string) error {
+func CloneRepo(repoURL, cacheDir, version string) error {
 	err := os.MkdirAll(filepath.Dir(cacheDir), os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	_, err = git.PlainClone(cacheDir, false, &git.CloneOptions{
+	cloneOptions := &git.CloneOptions{
 		URL: repoURL,
-	})
+	}
+
+	if version != "" {
+		// Check if the version is a tag
+		if strings.HasPrefix(version, "v") || strings.HasPrefix(version, "release") {
+			cloneOptions.ReferenceName = plumbing.NewTagReferenceName(version)
+		} else {
+			cloneOptions.ReferenceName = plumbing.NewBranchReferenceName(version)
+		}
+	}
+
+	_, err = git.PlainClone(cacheDir, false, cloneOptions)
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,8 @@ import (
 )
 
 type CloneRequest struct {
-	Repo string `json:"repo" binding:"required"`
+	Repo    string `json:"repo" binding:"required"`
+	Version string `json:"version"` // Optional version field
 }
 
 func CloneRepo(c *gin.Context) {
@@ -18,7 +19,7 @@ func CloneRepo(c *gin.Context) {
 		return
 	}
 
-	repoURL, isLua, hasRockspec, scanResponse, version, err := service.CloneRepository(req.Repo)
+	repoURL, isLua, hasRockspec, scanResponse, version, err := service.CloneRepository(req.Repo, req.Version)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
