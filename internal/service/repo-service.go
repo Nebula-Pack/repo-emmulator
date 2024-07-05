@@ -76,6 +76,13 @@ func CloneRepository(repo string, version string) (string, bool, bool, *ScanRock
 		}
 	}
 
+	if version == "" {
+		version, err = clone.ExtractVersion(cacheDir)
+		if err != nil {
+			return repoURL, false, false, nil, "", err
+		}
+	}
+
 	fmt.Printf("Final scan response: %+v\n", scanResponse)
 	return repoURL, isLua, hasRockspec, scanResponse, version, nil
 }
